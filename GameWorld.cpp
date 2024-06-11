@@ -1,20 +1,7 @@
-//GameWorld.cpp
 #include <SFML/Graphics.hpp>
+#include "GameWorld.h"
 #include "Tiles.cpp"
 #include <vector>
-
-class GameWorld {
-    
-public:
-    void setUpTiles();
-    void setUpDeco();
-    std::vector<GameTile*> deco;
-    std::vector<std::vector<GameTile*>> tiles;
-    int mapX;
-    int mapY;
-    GameWorld();
-    ~GameWorld(); // Ajoutez un destructeur pour nettoyer les pointeurs
-};
 
 GameWorld::GameWorld() {
     tiles.clear();
@@ -25,11 +12,38 @@ GameWorld::GameWorld() {
 }
 
 GameWorld::~GameWorld() {
-    for (auto& row : tiles) {
-        for (auto& tile : row) {
-            delete tile; 
+    // Libérer la mémoire des objets GameTile
+    for (auto row : tiles) {
+        for (auto tile : row) {
+            delete tile;
         }
     }
+
+    // Libérer la mémoire des objets GameTile dans le vecteur deco
+    for (auto tile : deco) {
+        delete tile;
+    }
+}
+
+bool GameWorld::checkCollision(const sf::FloatRect& bordure) const {
+    for (int i = 0; i < mapY; i++) {
+        for (int j = 0; j < mapX; j++) {
+            if (!tiles[i][j]->isPassable) {
+                if (bordure.intersects(tiles[i][j]->sprite.getGlobalBounds())) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    for (const GameTile* decoElement : deco) {
+        if (!decoElement->isPassable) {
+            if (bordure.intersects(decoElement->sprite.getGlobalBounds())) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 void GameWorld::setUpDeco() 

@@ -3,27 +3,110 @@
 #include <string>
 #include <cstdlib>
 #include "GameWorld.cpp"
+//#include "Tiles.cpp"
+#include "mob.cpp"
 
 sf::RenderWindow window;
 sf::RectangleShape rect;
 sf::RectangleShape rect2;
 int speed = 5;
 sf::Vector2i positionSouris;
+bool updateFps = true;
 sf::Texture perso;
 sf::Sprite sprite_perso;
 sf::Texture epee;
 sf::Sprite sprite_epee;
 enum Move { Down, Left, Right, Up };
 sf::Vector2i anim(1, Down);
-sf::Vector2i anim_epee(0, 0); // New vector for sword animation
-bool updateFps = true;
-bool swordVisible = false; // New flag for sword visibility
-bool swordAnimating = false; // Flag to check if sword animation is ongoing
-int swordAnimationFrame = 0; // Counter for sword animation frame
+sf::Vector2i anim_epee(0, 0);
+int swordAnimationFrame = 0;
+bool swordVisible = false;
+bool swordAnimating = false;
 sf::View view;
 int screenW = 800, screenH = 600;
 int BlockSize = 48;
 GameWorld gameWorld;
+
+Mob mob(200,200,gameWorld);
+// Mob mob1(1000,1000,gameWorld);
+// Mob mob2(1500,50,gameWorld);
+
+void init();
+bool checkCollision(sf::FloatRect bordure);
+void handleKeyboardInput();
+void handleMouseInput();
+void updateAnimation(sf::Clock& time);
+void updateSwordAnimation();
+void updateView();
+void drawGame();
+//std::vector<std::vector<int>> generateMapArray();
+
+
+int main() {
+    init();
+
+    sf::Clock time;
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+            if (event.type == sf::Event::KeyPressed)
+                updateFps = true;
+            else {
+                anim.x = 1;
+                updateFps = false;
+            }
+        }
+        
+        handleKeyboardInput();
+
+        mob.setMaze(gameWorld,sprite_perso);
+        mob.mapmob(sprite_perso.getPosition().x/50,sprite_perso.getPosition().y/50, 200/50,200/50);
+
+        // mob1.setMaze(gameWorld,sprite_perso);
+        // mob1.mapmob(sprite_perso.getPosition().x/50,sprite_perso.getPosition().y/50, 1000/50,1000/50);
+
+        // mob2.setMaze(gameWorld,sprite_perso);
+        // mob2.mapmob(sprite_perso.getPosition().x/50,sprite_perso.getPosition().y/50, 1500/50,50/50);
+        //printMapArray(mob.maze);
+        
+        updateAnimation(time);
+        
+        //updateSwordAnimation();
+        updateView();
+        
+        drawGame();
+        
+    }
+    return 0;
+}
+
+void init() {
+    window.create(sf::VideoMode(screenW, screenH), "RPG");
+    window.setPosition(sf::Vector2i(192, 0));
+    window.setFramerateLimit(60);
+
+    rect.setPosition(100, 100);
+    rect.setSize(sf::Vector2f(50, 50));
+    rect.setFillColor(sf::Color(255, 0, 0));
+
+    rect2.setPosition(1000, 1000);
+    rect2.setSize(sf::Vector2f(50, 50));
+    rect2.setFillColor(sf::Color(255, 0, 0));
+
+    if (!perso.loadFromFile("./Texture/Perso/Pnj48.png")) {
+        std::cout << "Erreur chargement pnj.png" << std::endl;
+    }
+    perso.setSmooth(true);
+    sprite_perso.setTexture(perso);
+
+    if (!epee.loadFromFile("./Texture/Perso/epee5.png")) {
+        std::cout << "Erreur chargement epee.png" << std::endl;
+    }
+    epee.setSmooth(true);
+    sprite_epee.setTexture(epee);
+}
 
 bool checkCollision(sf::FloatRect bordure) {
     for (int i = 0; i < gameWorld.mapY; i++) {
@@ -46,7 +129,7 @@ bool checkCollision(sf::FloatRect bordure) {
     return false;
 }
 
-void GestionClavier() {
+void handleKeyboardInput() {
     sf::Vector2f move(0, 0);
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
@@ -70,7 +153,7 @@ void GestionClavier() {
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-        if (!swordAnimating) { // Start sword animation if not already animating
+        if (!swordAnimating) {
             swordVisible = true;
             swordAnimating = true;
             swordAnimationFrame = 0;
@@ -105,137 +188,96 @@ void GestionClavier() {
         sprite_perso.setPosition(sf::Vector2f(sprite_perso.getPosition().x, (gameWorld.mapY - 1) * 50));
 }
 
-void GestionSouris() {
+void handleMouseInput() {
     if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
         positionSouris = sf::Mouse::getPosition(window);
-        int mouseX = positionSouris.x;
-        int mouseY = positionSouris.y;
     }
 }
 
-int main() {
-    window.create(sf::VideoMode(screenW, screenH), "RPG");
-    window.setPosition(sf::Vector2i(192, 0));
-    window.setFramerateLimit(60);
+void updateAnimation(sf::Clock& time) {
+    if (time.getElapsedTime().asMilliseconds() >= 150) {
+        if (updateFps) {
+            anim.x++;
+            if (anim.x * BlockSize >= 96)
+                anim.x = 0;
+        }
 
-    rect.setPosition(100, 100);
-    rect.setSize(sf::Vector2f(50, 50));
-    rect.setFillColor(sf::Color(255, 0, 0));
-
-    rect2.setPosition(1000, 1000);
-    rect2.setSize(sf::Vector2f(50, 50));
-    rect2.setFillColor(sf::Color(255, 0, 0));
-
-    sf::Clock time;
-    float fpsCount = 0, switchFps = 100, fpsSpeed = 500;
-
-    if (!perso.loadFromFile("./Texture/Perso/Pnj48.png")) {
-        std::cout << "Erreur chargement pnj.png" << std::endl;
-    }
-    perso.setSmooth(true);
-    sprite_perso.setTexture(perso);
-
-    if (!epee.loadFromFile("./Texture/Perso/epee.png")) {
-        std::cout << "Erreur chargement epee.png" << std::endl;
-    }
-    epee.setSmooth(true);
-    sprite_epee.setTexture(epee);
-
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
-                window.close();
-            if (event.type == sf::Event::KeyPressed)
-                updateFps = true;
-            else {
-                anim.x = 1;
-                updateFps = false;
+        if (swordAnimating) {
+            swordAnimationFrame++;
+            if (swordAnimationFrame >= 5) { // Assuming there are 3 frames for the sword animation
+                swordVisible = false;
+                swordAnimating = false;
             }
         }
 
-        GestionClavier();
-        
-        if (time.getElapsedTime().asMilliseconds() >= 200) {
-            if (updateFps){
-                anim.x++;
-                if (anim.x * BlockSize >= 96)
-                    anim.x = 0; 
-            }
-            
+        if (swordVisible) {
+            anim_epee.x++;
+            if (anim_epee.x * BlockSize >= 288)
+                anim_epee.x = 0;
+        }
 
-            if (swordAnimating) {
-                swordAnimationFrame++;
-                if (swordAnimationFrame >= 3) { // Assuming there are 3 frames for the sword animation
-                    swordVisible = false;
-                    swordAnimating = false;
-                }
-            }
+        time.restart();
+    }
+}
 
+void updateView() {
+    view.reset(sf::FloatRect(0, 0, screenW, screenH));
+    sf::Vector2f position(screenW / 2, screenH / 2);
+    position.x = sprite_perso.getPosition().x + 16 - (screenW / 2);
+    position.y = sprite_perso.getPosition().y + 16 - (screenH / 2);
+
+    if (position.x < 0)
+        position.x = 0;
+    if (position.y < 0)
+        position.y = 0;
+    if (position.x > screenW)
+        position.x = screenW;
+    if (position.y > screenH)
+        position.y = screenH;
+
+    view.reset(sf::FloatRect(position.x, position.y, screenW, screenH));
+    window.setView(view);
+}
+
+void drawGame() {
+    sprite_perso.setTextureRect(sf::IntRect(anim.x * BlockSize, anim.y * BlockSize, BlockSize, BlockSize));
+    sprite_epee.setTextureRect(sf::IntRect(anim_epee.x * BlockSize, anim.y * BlockSize, BlockSize, BlockSize));
+
+    for (int p = 1; p < 4; p++) {
+        for (int i = 0; i < gameWorld.mapY; i++) {
+            for (int j = 0; j < gameWorld.mapX; j++) {
+                if (gameWorld.tiles[i][j]->Profondeur == p)
+                    window.draw(gameWorld.tiles[i][j]->sprite);
+            }
+        }
+        if (p == 2) {
+            window.draw(rect);
+            window.draw(rect2);
+            window.draw(sprite_perso);
             if (swordVisible) {
-                anim_epee.x++;
-                if (anim_epee.x * BlockSize >= 100)
-                    anim_epee.x = 0;
+                if (anim.y == Up)
+                    sprite_epee.setPosition(sprite_perso.getPosition().x, sprite_perso.getPosition().y - 32);
+                else if (anim.y == Right)
+                    sprite_epee.setPosition(sprite_perso.getPosition().x + 32, sprite_perso.getPosition().y);
+                else if (anim.y == Left)
+                    sprite_epee.setPosition(sprite_perso.getPosition().x - 32, sprite_perso.getPosition().y);
+                else if (anim.y == Down)
+                    sprite_epee.setPosition(sprite_perso.getPosition().x, sprite_perso.getPosition().y + 32);
+                window.draw(sprite_epee);
             }
-
-            time.restart();
+            handleMouseInput();
         }
 
-        sprite_perso.setTextureRect(sf::IntRect(anim.x * BlockSize, anim.y * BlockSize, BlockSize, BlockSize));
-        sprite_epee.setTextureRect(sf::IntRect(anim_epee.x * BlockSize, anim.y * BlockSize, BlockSize, BlockSize));
-
-        view.reset(sf::FloatRect(0, 0, screenW, screenH));
-        sf::Vector2f position(screenW / 2, screenH / 2);
-        position.x = sprite_perso.getPosition().x + 16 - (screenW / 2);
-        position.y = sprite_perso.getPosition().y + 16 - (screenH / 2);
-
-        if (position.x < 0)
-            position.x = 0;
-        if (position.y < 0)
-            position.y = 0;
-        if (position.x > screenW)
-            position.x = screenW;
-        if (position.y > screenH)
-            position.y = screenH;
-
-        view.reset(sf::FloatRect(position.x, position.y, screenW, screenH));
-        window.setView(view);
-
-        for (int p = 1; p < 4; p++) {
-            for (int i = 0; i < gameWorld.mapY; i++) {
-                for (int j = 0; j < gameWorld.mapX; j++) {
-                    if (gameWorld.tiles[i][j]->Profondeur == p)
-                        window.draw(gameWorld.tiles[i][j]->sprite);
-                }
-            }
-
-            if (p == 2) {
-                window.draw(rect);
-                window.draw(rect2);
-                window.draw(sprite_perso);
-                if (swordVisible) {
-                    if (anim.y == Up)
-                        sprite_epee.setPosition(sprite_perso.getPosition().x, sprite_perso.getPosition().y - 32); 
-                    else if (anim.y == Right)
-                        sprite_epee.setPosition(sprite_perso.getPosition().x + 32, sprite_perso.getPosition().y); 
-                    else if (anim.y == Left)
-                        sprite_epee.setPosition(sprite_perso.getPosition().x - 32, sprite_perso.getPosition().y); 
-                    else if (anim.y == Down)
-                        sprite_epee.setPosition(sprite_perso.getPosition().x, sprite_perso.getPosition().y + 32); 
-
-                    window.draw(sprite_epee); 
-                }
-                GestionSouris();
-            }
-
-            for (int i = 0; i < gameWorld.deco.size(); i++) {
-                if (gameWorld.deco[i]->Profondeur == p)
-                    window.draw(gameWorld.deco[i]->sprite);
-            }
+        for (int i = 0; i < gameWorld.deco.size(); i++) {
+            if (gameWorld.deco[i]->Profondeur == p)
+                window.draw(gameWorld.deco[i]->sprite);
         }
-
-        window.display();
-        window.clear();
     }
-    return 0;
+    
+    mob.draw(window);
+    
+
+    window.display();
+    window.clear();
 }
+

@@ -1,16 +1,4 @@
-//Tiles.cpp
-#include <SFML/Graphics.hpp>
-
-class GameTile {
-public:
-    bool isPassable;
-    int Profondeur;
-    sf::Vector2f pos;
-    sf::Texture texture;
-    sf::Sprite sprite;
-    GameTile(const std::string&, int, int, bool);
-    bool setUpSprite(const std::string&);
-};
+#include "Tiles.h"
 
 GameTile::GameTile(const std::string& textureName, int x, int y, bool passable) {
     if (!setUpSprite(textureName))
