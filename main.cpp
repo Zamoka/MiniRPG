@@ -28,8 +28,8 @@ int BlockSize = 48;
 GameWorld gameWorld;
 
 Mob mob(200,200,gameWorld);
-// Mob mob1(1000,1000,gameWorld);
-// Mob mob2(1500,50,gameWorld);
+//Mob mob1(1000,1000,gameWorld);
+//Mob mob2(1500,50,gameWorld);
 
 void init();
 bool checkCollision(sf::FloatRect bordure);
@@ -64,10 +64,10 @@ int main() {
         mob.setMaze(gameWorld,sprite_perso);
         mob.mapmob(sprite_perso.getPosition().x/50,sprite_perso.getPosition().y/50, 200/50,200/50);
 
-        // mob1.setMaze(gameWorld,sprite_perso);
-        // mob1.mapmob(sprite_perso.getPosition().x/50,sprite_perso.getPosition().y/50, 1000/50,1000/50);
+        //mob1.setMaze(gameWorld,sprite_perso);
+        //mob1.mapmob(sprite_perso.getPosition().x/50,sprite_perso.getPosition().y/50, 1000/50,1000/50);
 
-        // mob2.setMaze(gameWorld,sprite_perso);
+        //mob2.setMaze(gameWorld,sprite_perso);
         // mob2.mapmob(sprite_perso.getPosition().x/50,sprite_perso.getPosition().y/50, 1500/50,50/50);
         //printMapArray(mob.maze);
         
@@ -254,6 +254,8 @@ void drawGame() {
             window.draw(rect);
             window.draw(rect2);
             window.draw(sprite_perso);
+            mob.draw(window);
+            //mob1.draw(window);
             if (swordVisible) {
                 if (anim.y == Up)
                     sprite_epee.setPosition(sprite_perso.getPosition().x, sprite_perso.getPosition().y - 32);
@@ -273,9 +275,6 @@ void drawGame() {
                 window.draw(gameWorld.deco[i]->sprite);
         }
     }
-    
-    mob.draw(window);
-    
 
     window.display();
     window.clear();

@@ -17,9 +17,11 @@ public:
     void setTextureRect();
     void setMaze(GameWorld& gameWorld,sf::Sprite& sprite_perso);
     void mapmob(int x_player, int y_player, int x_mob, int y_mob);
-    std::vector<sf::Vector2i> mobMove(); 
+    sf::Vector2f mobMove(); 
 
 private:
+    sf::Vector2f movedir;
+    int movephase;
     int pv;
     int speed;
     int animy;

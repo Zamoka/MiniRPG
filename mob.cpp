@@ -14,7 +14,7 @@ Mob::Mob(int x, int y,GameWorld& gameWorld) {
         if (!texture.loadFromFile("./Texture/Perso/zombie.png")) {
             std::cout << "Erreur chargement zombie.png" << std::endl;
         }
-        speed=1;
+        speed=3;
         pv=2;
     } else if (randomValue == 1) {
         std::cout << "goblin" << std::endl;
@@ -22,15 +22,18 @@ Mob::Mob(int x, int y,GameWorld& gameWorld) {
             std::cout << "Erreur chargement goblin.png" << std::endl;
         }
         pv=1;
-        speed=2;
+        speed=4;
     } else if (randomValue == 2) {
         std::cout << "hobgoblin" << std::endl;
         if (!texture.loadFromFile("./Texture/Perso/hobgoblin.png")) {
             std::cout << "Erreur chargement hobgoblin.png" << std::endl;
         }
-        speed=1;
+        speed=2;
         pv=5;
     }
+    movedir.x=-1;
+    movedir.y=0;
+    movephase=0;
     gameWorld=gameWorld;
     mobSize = 48;
     timer = 0;
@@ -57,41 +60,40 @@ void Mob::setPosition(float x, float y) {
 }
 
 void Mob::draw(sf::RenderWindow& window) {
-    std::vector<sf::Vector2i> moves = mobMove();
 
-    // Ajuster la hitbox pour les collisions
-    sf::FloatRect hitbox = sprite.getGlobalBounds();
-    hitbox.top += 20;
-    hitbox.height -= 20;
-    hitbox.left += 10;
-    hitbox.width -= 20;
-
-    for (const auto& move : moves) {
-        // Calculer la nouvelle position en pixels
-        float newX = sprite.getPosition().x + move.x;
-        float newY = sprite.getPosition().y + move.y;
-
-        sf::FloatRect futureBordure = hitbox;
-        futureBordure.left += move.x * mobSize;
-        futureBordure.top += move.y * mobSize;
-
-        // Vérifiez les collisions avant de déplacer le mob
-        if (!gameWorld.checkCollision(futureBordure)) {
-            // Mettre à jour l'orientation du mob en fonction de la direction
-            if (move.x > 0) {
-                animy = 2; // Vers la droite
-            } else if (move.x < 0) {
-                animy = 1; // Vers la gauche
-            } else if (move.y > 0) {
-                animy = 0; // Vers le bas
-            } else if (move.y < 0) {
-                animy = 3; // Vers le haut
-            }
-            setTextureRect();
-            sprite.setPosition(newX, newY);
-            break; // Sortir de la boucle dès qu'un mouvement valide est trouvé
-        }
+    sf::Vector2f moves;
+    if (movephase < 50) {
+        moves = sf::Vector2f(movedir.x , movedir.y );
+        movephase += speed;
+    } else {
+        sf::Vector2f newMoveDir = mobMove();
+        moves = sf::Vector2f(newMoveDir.x , newMoveDir.y );
+        movedir = sf::Vector2f(newMoveDir.x / speed, newMoveDir.y / speed);
+        movephase = speed;
     }
+
+    if (moves.x != 0) {
+        moves.x = (moves.x > 0) ? speed : -speed;
+    }
+    if (moves.y != 0) {
+        moves.y = (moves.y > 0) ? speed : -speed;
+    }
+
+    //std::cout<< sprite.getPosition().x << " "<< sprite.getPosition().y << std::endl;
+    // Calculer la nouvelle position en pixels
+    int X = sprite.getPosition().x + moves.x;
+    int Y = sprite.getPosition().y + moves.y;
+    if (moves.x > 0) {
+        animy = 2; // Vers la droite
+    } else if (moves.x < 0) {
+        animy = 1; // Vers la gauche
+    } else if (moves.y > 0) {
+        animy = 0; // Vers le bas
+    } else if (moves.y < 0) {
+        animy = 3; // Vers le haut
+    }
+    setTextureRect();
+    sprite.setPosition(X, Y);    
 
     window.draw(sprite);
 }
@@ -199,14 +201,13 @@ void Mob::mapmob(int x_player, int y_player, int x_mob, int y_mob)
     maze[y_player][x_player]=0;
 }
 
-std::vector<sf::Vector2i> Mob::mobMove() {
-    std::vector<sf::Vector2i> moves;
-
-    int x = sprite.getPosition().x / mobSize;
+sf::Vector2f Mob::mobMove() {
+    sf::Vector2f move(0, 0);
+    int up = 200, down = 200, right = 200, left = 200; // Initialisez à une valeur élevée
+    int x = sprite.getPosition().x / mobSize; // Convertissez les coordonnées du sprite en indices de grille
     int y = sprite.getPosition().y / mobSize;
 
-    int up = 200, down = 200, right = 200, left = 200;
-
+    // Vérifiez les limites avant d'accéder aux éléments du tableau
     if (y - 1 >= 0 && maze[y - 1][x] != -1)
         up = maze[y - 1][x];
     if (y + 1 < maze.size() && maze[y + 1][x] != -1)
@@ -216,16 +217,16 @@ std::vector<sf::Vector2i> Mob::mobMove() {
     if (x + 1 < maze[0].size() && maze[y][x + 1] != -1)
         right = maze[y][x + 1];
 
-    int minDistance = std::min({up, down, left, right});
+    // Comparez les valeurs et déterminez la direction du mouvement
 
-    if (up == minDistance)
-        moves.push_back({0, -speed});
-    if (down == minDistance)
-        moves.push_back({0, speed});
-    if (left == minDistance)
-        moves.push_back({-speed, 0});
-    if (right == minDistance)
-        moves.push_back({speed, 0});
+    if (up <= down && up <= left && up <= right)
+        move.y = -speed;
+    else if (down <= up && down <= left && down <= right)
+        move.y = speed;
+    else if (left <= down && left <= up && left <= right)
+        move.x = -speed;
+    else if (right <= down && right <= left && right <= up)
+        move.x = speed;
 
-    return moves;
+    return move;
 }
