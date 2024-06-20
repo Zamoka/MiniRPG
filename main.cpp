@@ -8,7 +8,6 @@
 
 sf::RenderWindow window;
 sf::RectangleShape rect;
-sf::RectangleShape rect2;
 int speed = 5;
 sf::Vector2i positionSouris;
 bool updateFps = true;
@@ -26,6 +25,9 @@ sf::View view;
 int screenW = 800, screenH = 600;
 int BlockSize = 48;
 GameWorld gameWorld;
+int KillCount=0;
+sf::Font font;
+sf::Text score;
 
 Mob mob(200,200,gameWorld);
 //Mob mob1(1000,1000,gameWorld);
@@ -46,6 +48,8 @@ int main() {
     init();
 
     sf::Clock time;
+    int flash;
+    sf::Color targetColor(0, 0, 0, 0);
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -62,8 +66,54 @@ int main() {
         handleKeyboardInput();
 
         mob.setMaze(gameWorld,sprite_perso);
-        mob.mapmob(sprite_perso.getPosition().x/50,sprite_perso.getPosition().y/50, 200/50,200/50);
-
+        mob.mapmob(sprite_perso.getPosition().x/50,int(sprite_perso.getPosition().y)/50, 200/50,200/50);
+        mob.setMobimun(mob.getMobimun()+1);
+        if (swordAnimating)
+        {
+            //std::cout<< (int)sprite_epee.getPosition().x/50 << " "<<(int)sprite_epee.getPosition().y/50 << "      " << (int)mob.getPosition().x/50<<" "<< (int)mob.getPosition().y/50 <<std::endl;
+            if ((int)sprite_epee.getPosition().x/50==(int)mob.getPosition().x/50 && (int)sprite_epee.getPosition().y/50==(int)mob.getPosition().y/50 && mob.getMobimun()>50)
+            {   
+                rect.setFillColor(sf::Color(64, 64, 64, 50));
+                mob.mobSetPv(mob.mobGetPv()-1);
+                mob.setMobimun(0);
+                if (mob.mobGetPv()==0)
+                {
+                    KillCount++;
+                    score.setString("score : " + std::to_string(KillCount));
+                    if (mob.mobGetSpeed()==1)
+                    {
+                        mob.setPosition(50,50);
+                        mob.mobSetPv(5);
+                    }
+                    else if (mob.mobGetSpeed()==2)
+                    {
+                        mob.setPosition(50,50);
+                        mob.mobSetPv(2);
+                    }
+                    else if (mob.mobGetSpeed()==3)
+                    {
+                        mob.setPosition(100,100);
+                        mob.mobSetPv(2);
+                    }
+                    
+                }
+            }
+        }
+        if ((int)sprite_perso.getPosition().x/50==(int)mob.getPosition().x/50   && (int)sprite_perso.getPosition().y/50==(int)mob.getPosition().y/50 && mob.getMobimun()>50 ) // 
+        {
+            std::cout<<"mouru"<<std::endl;
+            mob.setMobimun(0);
+            rect.setFillColor(sf::Color(255, 0, 0, 50));
+        }
+        if (rect.getFillColor() != targetColor)
+        {
+            flash++;
+            if (flash==10)
+            {
+                flash=0;
+                rect.setFillColor(sf::Color(0, 0, 0, 0));
+            }
+        }
         //mob1.setMaze(gameWorld,sprite_perso);
         //mob1.mapmob(sprite_perso.getPosition().x/50,sprite_perso.getPosition().y/50, 1000/50,1000/50);
 
@@ -87,13 +137,17 @@ void init() {
     window.setPosition(sf::Vector2i(192, 0));
     window.setFramerateLimit(60);
 
-    rect.setPosition(100, 100);
-    rect.setSize(sf::Vector2f(50, 50));
-    rect.setFillColor(sf::Color(255, 0, 0));
+    rect.setPosition(0, 0);
+    rect.setSize(sf::Vector2f(50*32, 50*24));
+    rect.setFillColor(sf::Color(0, 0, 0, 0));
 
-    rect2.setPosition(1000, 1000);
-    rect2.setSize(sf::Vector2f(50, 50));
-    rect2.setFillColor(sf::Color(255, 0, 0));
+    if (!font.loadFromFile("./res/poppins.ttf"))
+        std::cout<<  "Erreur chargement font" << std::endl;
+    
+    score.setFont(font);
+    score.setCharacterSize(30);
+    score.setFillColor(sf::Color::White);
+    score.setPosition(650,0);
 
     if (!perso.loadFromFile("./Texture/Perso/Pnj48.png")) {
         std::cout << "Erreur chargement pnj.png" << std::endl;
@@ -251,8 +305,6 @@ void drawGame() {
             }
         }
         if (p == 2) {
-            window.draw(rect);
-            window.draw(rect2);
             window.draw(sprite_perso);
             mob.draw(window);
             //mob1.draw(window);
@@ -269,14 +321,17 @@ void drawGame() {
             }
             handleMouseInput();
         }
-
+        window.draw(rect);
         for (int i = 0; i < gameWorld.deco.size(); i++) {
             if (gameWorld.deco[i]->Profondeur == p)
                 window.draw(gameWorld.deco[i]->sprite);
         }
     }
 
+    window.setView(window.getDefaultView());  // Réinitialiser à la vue par défaut
+    window.draw(score);                       // Dessiner le texte du score
+    window.setView(view);
+
     window.display();
     window.clear();
 }
-

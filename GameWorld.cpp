@@ -146,7 +146,7 @@ void GameWorld::setUpDeco()
     deco.push_back(new GameTile("./Texture/map/Maison/Maison/8.png", posx+50, posy+100, false));
     deco.push_back(new GameTile("./Texture/map/Maison/Maison/9.png", posx+100, posy+100, false));
     deco.push_back(new GameTile("./Texture/map/Maison/Maison/10.png", posx, posy+150, false));
-    deco.push_back(new GameTile("./Texture/map/Maison/Maison/11.png", posx+50, posy+150, true));
+    deco.push_back(new GameTile("./Texture/map/Maison/Maison/11.png", posx+50, posy+150, false));
     deco.push_back(new GameTile("./Texture/map/Maison/Maison/12.png", posx+100, posy+150, false));
 
 }

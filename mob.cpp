@@ -14,7 +14,7 @@ Mob::Mob(int x, int y,GameWorld& gameWorld) {
         if (!texture.loadFromFile("./Texture/Perso/zombie.png")) {
             std::cout << "Erreur chargement zombie.png" << std::endl;
         }
-        speed=3;
+        speed=2;
         pv=2;
     } else if (randomValue == 1) {
         std::cout << "goblin" << std::endl;
@@ -22,13 +22,13 @@ Mob::Mob(int x, int y,GameWorld& gameWorld) {
             std::cout << "Erreur chargement goblin.png" << std::endl;
         }
         pv=1;
-        speed=4;
+        speed=3;
     } else if (randomValue == 2) {
         std::cout << "hobgoblin" << std::endl;
         if (!texture.loadFromFile("./Texture/Perso/hobgoblin.png")) {
             std::cout << "Erreur chargement hobgoblin.png" << std::endl;
         }
-        speed=2;
+        speed=1;
         pv=5;
     }
     movedir.x=-1;
@@ -47,12 +47,6 @@ Mob::Mob(int x, int y,GameWorld& gameWorld) {
     sprite.setOrigin(0,0);
 
     sprite.setPosition(x, y);
-}
-
-
-
-void Mob::move(float dx, float dy) {
-    sprite.move(dx, dy);
 }
 
 void Mob::setPosition(float x, float y) {
@@ -165,7 +159,13 @@ std::vector<std::vector<int>> generateMapArray(GameWorld& gameWorld,sf::Sprite s
     return mapArray;
 }
 
-
+sf::Vector2f Mob::getPosition() 
+{
+    sf::Vector2f coord(0, 0);
+    coord.x = sprite.getPosition().x;
+    coord.y = sprite.getPosition().y;
+    return coord;
+}
 
 void Mob::mapmob(int x_player, int y_player, int x_mob, int y_mob)
 {

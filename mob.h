@@ -13,13 +13,20 @@ public:
     Mob(int x, int y,GameWorld& gameWorld);
     void move(float dx, float dy);
     void setPosition(float x, float y);
+    sf::Vector2f getPosition(); 
     void draw(sf::RenderWindow& window);
     void setTextureRect();
     void setMaze(GameWorld& gameWorld,sf::Sprite& sprite_perso);
     void mapmob(int x_player, int y_player, int x_mob, int y_mob);
-    sf::Vector2f mobMove(); 
+    sf::Vector2f mobMove();
+    void mobSetPv(int hp) { pv=hp;}
+    int mobGetPv() {return pv;}
+    int mobGetSpeed() {return speed;}
+    void setMobimun(int t) {mobimun=t;}
+    int getMobimun() {return mobimun;}
 
 private:
+    int mobimun;
     sf::Vector2f movedir;
     int movephase;
     int pv;
